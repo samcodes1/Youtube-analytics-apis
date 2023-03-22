@@ -71,6 +71,17 @@
 			<version>20210307</version> <!-- This is the latest version as of the knowledge cutoff date -->
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${spring-security.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>5.7.3</version>
+		</dependency>
+
 		<!--		<dependency>-->
 <!--			<groupId>com.google.http-client</groupId>-->
 <!--			<artifactId>google-http-client-jackson</artifactId>-->
