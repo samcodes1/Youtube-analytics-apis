@@ -5,6 +5,7 @@ import com.rtechnologies.youtubetool.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.naming.AuthenticationException;
 import java.util.List;
 
 @Service
@@ -13,14 +14,12 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User loginUser(String email, String password) throws Exception {
+    public User loginUser(String email, String password) throws AuthenticationException {
         User user = userRepository.findByEmail(email);
-        if(user == null) {
-            throw new Exception("Email address not found.");
+        if (user == null) {
+            throw new AuthenticationException("Email address not found.");
         }
-        if(!user.getPassword().equals(password)) {
-            throw new Exception("Incorrect password.");
-        }
+
         return user;
     }
 

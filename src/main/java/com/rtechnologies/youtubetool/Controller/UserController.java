@@ -10,8 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
+import javax.naming.AuthenticationException;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,39 +28,55 @@ public class UserController {
     @Autowired
     private YoutubeService youTubeService;
 
-    @RequestMapping(value="/register", method = RequestMethod.POST)
-    public User registerUser(@RequestBody User user) {
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@RequestBody User user) {
         try {
             String channelId = user.getYoutubeChannelLink().substring(
-                        user.getYoutubeChannelLink().lastIndexOf("/") + 1);
+                    user.getYoutubeChannelLink().lastIndexOf("/") + 1);
             Channel tempChannel = getChannelDetails(channelId);
 
-            if(!tempChannel.getChannelName().isEmpty()){
+            if (!tempChannel.getChannelName().isEmpty()) {
                 user.setYoutubeChannelLink(channelId);
+
+                // Hash password before storing in the database
+                String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+                user.setPassword(hashedPassword);
+
                 User registeredUser = userService.registerUser(user);
-                return registeredUser;
+
+                return ResponseEntity.ok().body(registeredUser);
             }
-            return  new User();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         } catch (Exception e) {
-            return new User();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    @GetMapping("/login/{email}/{password}")
-    public User loginUser(@PathVariable String email, @PathVariable String password) {
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestParam("email") String email,
+                                       @RequestParam("password") String password) {
         try {
             User user = userService.loginUser(email, password);
-            return user;
+            if (user != null) {
+                // Compare hashed passwords
+                if (BCrypt.checkpw(password, user.getPassword())) {
+                    return ResponseEntity.ok().body(user);
+                }
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
         } catch (Exception e) {
-            System.out.println(e.toString());
-            return new User();
+            // unexpected error occurred, log the error and return HTTP 500 status code
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Server Error");
         }
     }
 
-    @GetMapping("/get-users")
-    public List<User> getUsers(){
-        return userService.getUsers();
-    }
+//    @GetMapping("/get-users")
+//    public List<User> getUsers(){
+//        return userService.getUsers();
+//    }
 
     @GetMapping("/channels/videos/{channelId}")
     public List<Video> getChannelVideos(@PathVariable String channelId) {
