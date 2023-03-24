@@ -15,6 +15,9 @@ public class Video {
     private long comments;
     private long views;
 
+    public Video() {
+    }
+
     public Video(String id, String title, String description, LocalDateTime publishedAt) {
         this.id = id;
         this.title = title;

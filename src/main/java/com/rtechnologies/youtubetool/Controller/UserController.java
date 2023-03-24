@@ -107,5 +107,38 @@ public class UserController {
             return new VideoStats();
         }
     }
+
+    //New apis
+    @GetMapping("/channel/video/most-viewed/{query}")
+    public ResponseEntity<Video> getMostViewedVideo(@PathVariable String query) {
+        System.out.println(query);
+        try {
+            Video video = youTubeService.getMostViewedVideo(query);
+            if (video != null) {
+                return ResponseEntity.ok(video);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/channel/video/search-results/{query}")
+    public ResponseEntity<List<Video>> getVideoListWithKeyword(@PathVariable String query) {
+        try {
+            List<Video> videos = youTubeService.videoSearchResults(query);
+            if (videos != null && !videos.isEmpty()) {
+                return ResponseEntity.ok(videos);
+            } else {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (Exception e) {
+            // log the exception instead of printing the stack trace
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }
 

@@ -108,7 +108,6 @@ public class YoutubeService {
     }
 
     public Channel getChannelDetails(String channelId) throws Exception {
-        System.out.println("https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=" + channelId + "&key=" + YOUTUBE_API_KEY);
         final String apiURL = "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=" + channelId + "&key=" + YOUTUBE_API_KEY;
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.getForObject(apiURL, String.class);
@@ -150,5 +149,51 @@ public class YoutubeService {
 
         return stats;
     }
+
+    public Video getMostViewedVideo(String query) throws JsonProcessingException {
+        Video video = new Video();
+        final String apiURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&order=viewCount&q="+query+"&type=video&key="+YOUTUBE_API_KEY;
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.getForObject(apiURL, String.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(response);
+
+        String videoId = root.path("items").get(0).path("id").path("videoId").asText();
+        String channelId = root.path("items").get(0).path("snippet").path("channelId").asText();
+        String title = root.path("items").get(0).path("snippet").path("title").asText();
+        String description = root.path("items").get(0).path("snippet").path("description").asText();
+        String thumbnailUrl = root.path("items").get(0).path("snippet")
+                .path("thumbnails").path("default").path("url").asText();
+
+        video.setId(videoId);
+        video.setTitle(title);
+        video.setDescription(description);
+        video.setThumbnailLink(thumbnailUrl);
+        video = getDetailedVideoData(video);
+        return video;
+    }
+
+    public List<Video> videoSearchResults(String query){
+        final String apiURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q="+query+"&type=video&key="+YOUTUBE_API_KEY;
+        ResponseEntity<YouTubeApiResponse> responseEntity = restTemplate.getForEntity(apiURL, YouTubeApiResponse.class);
+        List<Video> videos = new ArrayList<>();
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            YouTubeApiResponse apiResponse = responseEntity.getBody();
+            if (apiResponse != null && apiResponse.getItems() != null) {
+                for (YouTubeApiResponse.Item item : apiResponse.getItems()) {
+                    Video video = new Video(item.getId().getVideoId(), item.getSnippet().getTitle(), item.getSnippet().getDescription(), item.getSnippet().getPublishedAt());
+                    try {
+                        videos.add(getDetailedVideoData(video));
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        return videos;
+    }
+
+
+
 }
 
