@@ -81,7 +81,7 @@ public class UserController {
     @GetMapping("/channels/videos/{channelId}")
     public List<Video> getChannelVideos(@PathVariable String channelId) {
         try {
-            return youTubeService.getChannelVideos(channelId, 10);
+            return youTubeService.getChannelVideos(channelId, 20);
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
