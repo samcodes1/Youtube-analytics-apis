@@ -98,7 +98,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/channel/average-stats")
+    @PostMapping("/channel/average-stats")
     public VideoStats getChannelStats(@RequestBody List<Video> videos) {
         try {
             return youTubeService.averageStats(videos);
